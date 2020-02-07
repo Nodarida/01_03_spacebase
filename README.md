@@ -4,6 +4,8 @@ Space Invaders Beta
 # Space Invaders, IoT 1
 # Marius Schairer, Noah Mantel
 
+![](https://raw.githubusercontent.com/Nodarida/01_03_spacebase/master/SpaceInvaders.png)
+
 Unser erstes Projekt im Fach Programmiersprachen (Dozent: Florian Geiselhart) war ein Space-Invaders-Game zu programmieren. 
 
 Ziel der Aufgabe war es:
