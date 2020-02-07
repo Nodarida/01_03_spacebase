@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<title>SPACE INVADERS</title>
+	<link href="style.css" rel="stylesheet" /> <!-- bezieht das Stylesheet in das Game -->
+	<link href="https://fonts.googleapis.com/css?family=Press+Start+2P&display=swap" rel="stylesheet"> <!-- bindet die Schriftfamilie mit ein -->
+</head>
+
+
+<body>
+	<p class="title" id="title">SPACE INVADERS</p> <!-- schreibt den Titel  -->
+	<p class="scoreboard" id="scoreboard">Scoreboard</p> <!-- stellt das Scoreboard dar -->
+	<pre id="console"></pre>
+	</pre>
+	<audio id="audioplayer" src="PlayerONE.mp3" autoplay></audio> <!-- fügt das Hintergrundlied zu -->
+	<audio id="audioeffects" src="shoot.mp3"></audio> <!-- fügt den Audioeffekt hinzu -->
+	<script src="classes.js"></script> <!-- importiert die class -->
+
+
+	<script>
+		let startPosX = 1; /* x-Position der Invaders */
+		let startPosY = 1; /* y-Position der Invaders */
+		let invaders = [];
+		let renderStr = ""; /* String der Charaktere wird auf dem Screen dargestellt */
+		let rows = 50; /* Höhe des Screens */
+		let cols = 140; /* Breite des Screens */
+		let cnt = 0;
+		let spaceshipPos = Math.round(cols / 2); /* Positioniert das Spaceship */
+		let currentBullets = []; /* sichtbare Munition */
+		let objects = []; 
+		let run = 0; /* Variable zum Rendern */
+		let invaderDirection = 1;
+		let invaderRow = [];
+		let rowId = 0; /* Array sichert Invaders */
+		let kills = 0; /* Kills beginnen bei 0 */
+		const gameSpeed = 10; /* Schnelligkeit des Games */
+		const invaderWidth = 5; /* Breite des Invaders */
+		const invaderHeight = 10; /* Höhe des Invaders */
+
+
+		function playMusic() { /* Funktion zum Apspielen der Musik */
+			audioplayer = document.getElementById("audioplayer");
+			audiplayer.volume = 0.5; /* Lautstärke Musik */
+			audioplayer.play();
+
+		}
+
+		function playEffect() { /* Funktion zum Abspielen der Soundeffekte */
+			audioplayer = document.getElementById("audioeffects");
+			audioplayer.volume = 0.5;
+			audioplayer.play();
+
+		}
+		
+		/*
+		 *	SPIELELOGIK
+		 */
+
+
+		function newGame() { /* startet neues Spiel + Invader spawnen*/
+
+
+			if (rowId == 0) {
+				let newInvaderRow = new InvaderRow(startPosX, startPosY, invaderWidth, invaderHeight, InvaderRow
+					.generateInvaderRow(invaderWidth, invaderHeight), rowId);
+				invaders.push(newInvaderRow);
+			}
+
+			//TODO Punktestände
+			objects.push({
+				x: Math.round(cols / 2) - 5,
+				y: rows - 10,
+				width: 10,
+				height: 3,
+				char: "*"
+			});
+		}
+
+				/*
+				 *	HELFERFUNKTIONEN
+				 */
+				//Characters in String editieren
+
+				//X/Y-Wert in fortlaufende String-Position umwandeln
+				function xyToStringPos(posX, posY) {
+					//Zusätzliche Characters wegen Zeilenumbrüchen
+					let rowOffset = posY;
+					//Position im Gesamtstring, (AnzahlZeilen/YPos+i)*ZeichenProZeile plus rowOffset plus momentan gezeichnete Zeile des Ships
+					let stringpos = posY * cols + rowOffset + posX;
+					return stringpos;
+				}
+
+				//Spieler-Interaktionen verschicken
+				document.addEventListener('keydown', (event) => {
+					const keyCode = event.keyCode;
+
+					if (keyCode === 37) {
+						//Linke Pfeiltaste - Spaceship nach links bewegen
+						spaceshipPos = Math.max(0, spaceshipPos - 1);
+					} else if (keyCode === 39) {
+						//Rechte Pfeiltaste - Spaceship nach rechts bewegen
+						spaceshipPos = Math.min(cols - 7, spaceshipPos + 1);
+					} else if (keyCode === 32) {
+						//Leertase - Feuer!
+						firebullet(); /* bei gedrückter Leertaste Soundeffekt erscheint */
+						playEffect();
+						playMusic();
+					}
+				}, false);
+
+				/*
+				 * RENDERFUNKTIONEN
+				 */
+
+				function renderBackground(rows, cols) {
+					//console.log("render "+cnt)
+					let str = ""
+					for (var i = 0; i < rows; i++) {
+						for (var j = 0; j < cols; j++) {
+							if (i == cnt + (Math.round(Math.random() * 20))) str += "."
+							else str += " "
+						}
+						str += "\n";
+					}
+					cnt++;
+					if (cnt > rows) cnt = 0; /* Sterne erscheinen nach gewissen Abständen */
+					return str;
+				}
+
+				function renderInvaderRow(invaders) {
+					let currentInvXPos = invaders[rowId].posX;
+					for (let j = 0; j < invaders[rowId].invaders.length; j++) {
+						for (let i = 0; i < invaders[rowId].invaders[j].appearance.length; i++) {
+							renderStr = Helper.setCharsAt(renderStr, xyToStringPos(invaders[rowId].invaders[j].id + currentInvXPos,
+								invaders[rowId].posY + i), invaders[rowId].invaders[j].appearance[i]);
+						}
+						currentInvXPos = currentInvXPos + invaderWidth * 2 + invaderWidth / 2;
+					}
+				}
+
+				function renderSpaceship(posX, posY) { /* ASCII Zeichen als dargestelltes Spaceship */
+					//Spaceship-Array
+					let spaceship = ["◄▀▀████▀▀►"]
+
+					for (var i = 0; i < spaceship.length; i++) {
+						//Zeilenweise in String schreiben
+						renderStr = Helper.setCharsAt(renderStr, xyToStringPos(posX, posY + i), spaceship[i]);
+					}
+				}
+
+				function renderobjects() {
+					objects.forEach((obstacle) => {
+						for (var i = 0; i < obstacle.height; i++) {
+							//Zeilenweise in String schreiben
+							renderStr = Helper.setCharsAt(renderStr, xyToStringPos(obstacle.x, obstacle.y + i), obstacle.char
+								.repeat(
+									obstacle.width));
+						}
+					});
+				}
+
+				function renderBullets() {
+					//Kugeln entfernen die am oberen Rand angekommen sind ohne Treffer
+					currentBullets = currentBullets.filter(bullet => bullet.y > 1);
+					//Kugeln einen Schritt weiter bewegen, dann rendern
+					currentBullets.forEach((bullet) => {
+						bullet.y -= 1;
+						if (renderStr[xyToStringPos(bullet.x, bullet.y - 1)] == '▓') {
+							let currentId = 0;
+							for (let invaderPos = invaders[rowId].posX; invaderPos <= invaders[rowId].posX + 5 * (invaderWidth * 2 + /* wird geprüft ob Invader getroffen wurde */
+									invaderWidth / 2); invaderPos = invaderPos + invaderWidth * 2 + invaderWidth / 2) {
+								if (bullet.x > invaderPos && bullet.x < invaderPos + invaderWidth * 2 + invaderWidth) {
+									invaders[rowId].invaders[currentId].knock = true; /* ermittelt ob getroffen wurde */
+									invaders[rowId].invaders[currentId].explode();
+									kills++;
+									break;
+								}
+								currentId++;
+							}
+							currentBullets = currentBullets.filter(currentBullet => currentBullet != bullet); /* Invader getroffen? - anschließend gelöscht */
+						}
+						if (renderStr[xyToStringPos(bullet.x, bullet.y - 1)] == '=') {
+							currentBullets = currentBullets.filter(currentBullet => currentBullet != bullet); /* Bullets werden gelöscht wenn Objekt getroffen wird */
+						}
+						renderStr = Helper.setCharsAt(renderStr, xyToStringPos(bullet.x, bullet.y), "💣"); /* Bullet Zeichen bestimmen*/
+					})
+				}
+
+				function firebullet() {
+					currentBullets.push({
+						x: spaceshipPos + 3,
+						y: rows - 4
+					});
+				}
+
+
+				//Hauptrenderfunktion
+				function render() {
+					run++
+					if (run >= gameSpeed) {
+						run = 0;
+						for (let i = rowId; i < invaders.length; i++) {
+							for (let j = 0; j < invaders[i].invaders.length; j++) {
+								if (invaders[i].invaders[j].knock) {
+									invaders[i].invaders[j].explodeTime++;
+								}
+								if (invaders[i].invaders[j].explodeTime >= 2) { /* Dauer der Explosion */
+									invaders[i].invaders[j].appearance = [];
+								}
+							}
+						}
+						if (invaders[rowId].posX == 0 || invaders[rowId].posX == Math.floor(cols * 0.2 + invaderWidth * 2 - 5)) {
+							invaders[rowId].step("down");              /* checkt die Ränder. Sobald Invaders am Rand sind ändert es Richtung und Position */
+							invaderDirection = invaderDirection * (-1);
+							invaders[rowId].step(invaderDirection);
+						} else {
+							invaders[rowId].step(invaderDirection); /* gleiche Richtung der Invaderreihe */
+						}
+					}
+					//Render Background
+					renderStr = renderBackground(rows, cols);
+					//Render Obstacle
+					renderobjects();
+					renderSpaceship(spaceshipPos, rows - 4, renderStr);
+					//Render Invaders
+					renderInvaderRow(invaders, renderStr);
+					//Gesamtergebnis anzeigen
+
+					//Render Bullets
+					renderBullets(renderStr);
+					document.getElementById("scoreboard").innerText = "Scoreboard \n \n" + kills; /* Scoreboard ermittelt Ergebniss und zählt bei Treffer hoch */
+					document.getElementById("console").innerText = renderStr;
+				}
+
+				//Es geht los - alle 40 Millisekunden rendern		
+				newGame();
+				setInterval(render, 40);
+	</script>
+</body>
+
+</html>

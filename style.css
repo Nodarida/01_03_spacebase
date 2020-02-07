@@ -1,0 +1,30 @@
+pre {     /* Position des GameScreens */
+  position: absolute;
+			left: 50%; /* Position von links */
+			top: 50%; /* Position von oben */
+			-webkit-transform: translate(-50%, -50%); 
+			transform: translate(-50%, -50%);
+			border: 5px solid rgb(57, 255, 14); /* Rahmen */
+  }
+  
+  body {
+  color: yellowgreen; /* Farbe Objekte */
+  background-color: black; /* Hintergrundfarbe */
+  font-family: 'press start 2P'; /* Schriftart */
+  }
+  
+  .title {
+    font-family: 'Press Start 2P'; /* Layout des Titels */
+    color:purple; /* Textfarbe */
+    font-size: 30px; /* Textgröße */
+    text-align: center; /* Textpositionierung */
+  }
+  
+  .scoreboard {
+    font-family: 'Press Start 2P', cursive;
+    color: purple;
+    font-size: 20px;
+    position: absolute; /* Textposition */
+    top: 10vh; /* Position von oben */
+  }
+
